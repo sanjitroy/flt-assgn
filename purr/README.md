@@ -18,11 +18,6 @@ This repository contains the source code for a **Single Restaurant Food Delivery
 
 ![Checkout Screen](./Screenshot_20241206-223533.png)
 
-## Direct Install
-
-- Download this app from this google drive folder and directly run it in your android device. It does not have any external requirements like internet but it does simulate a network call.
-📥 [Download APK](https://drive.google.com/file/d/1hk3fZRjqVNFcIGwdv_nKfhLHRuS7yelF/view?usp=sharing)
-
 ## 🚀 Features
 
 ### Core Features:
@@ -129,6 +124,7 @@ Here's the updated **Folder Structure** section for your Markdown file:
 4. **`mocks/`**  
    Contains mock data for development or testing.
 
+
 ---
 
 ## 🎨 Design System Overview
@@ -153,6 +149,10 @@ Here's the updated **Folder Structure** section for your Markdown file:
 ---
 
 ## 💡 Setup Instructions
+
+## Direct Install
+
+- This repo contains an apk file food_menu_app.apk. Users can directly install this app on their local devices to test this app. It does not have any external requirements like internet but it does simulate a network call.
 
 ### Prerequisites:
 
