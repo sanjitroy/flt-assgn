@@ -1,0 +1,32 @@
+class AssetImages {
+  static const String bananaImage = 'assets/images/Banana.png';
+  static const String breadSlicesImage = 'assets/images/Bread-Slices.png';
+  static const String candiesImage = 'assets/images/Candies.png';
+  static const String cookieImage = 'assets/images/Cookie.png';
+  static const String dessertImage = 'assets/images/Dessert.png';
+  static const String dessert2Image = 'assets/images/Dessert2.png';
+  static const String egg1Image = 'assets/images/Egg1.png';
+  static const String egg2Image = 'assets/images/Egg2.png';
+  static const String foodPlateImage = 'assets/images/Food-Plate.png';
+  static const String fruitsPlateImage = 'assets/images/Fruits-Plate.png';
+  static const String garlicImage = 'assets/images/Garlic.png';
+  static const String gingerImage = 'assets/images/Ginger.png';
+  static const String greenApplesImage = 'assets/images/Green-Apples.png';
+  static const String grilledChickenImage = 'assets/images/Grilled-Chicken.png';
+  static const String indianChutneyImage = 'assets/images/Indian-Chutney.png';
+  static const String leavesImage = 'assets/images/Leaves.png';
+  static const String lemonImage = 'assets/images/Lemon.png';
+  static const String limeImage = 'assets/images/Lime.png';
+  static const String meatImage = 'assets/images/Meat.png';
+  static const String napoliBreadImage = 'assets/images/Napoli-Bread.png';
+  static const String onionImage = 'assets/images/Onion.png';
+  static const String pepperImage = 'assets/images/Pepper.png';
+  static const String pepper2Image = 'assets/images/Pepper2.png';
+  static const String pizzaImage = 'assets/images/Pizza.png';
+  static const String saladImage = 'assets/images/Salad.png';
+  static const String salad2Image = 'assets/images/Salad2.png';
+  static const String soupImage = 'assets/images/Soup.png';
+  static const String spiceMortarImage = 'assets/images/Spice-Mortar.png';
+  static const String sweetBowlImage = 'assets/images/Sweet-Bowl.png';
+  static const String tomatoImage = 'assets/images/Tomato.png';
+}

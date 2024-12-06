@@ -1,39 +1,56 @@
+import 'package:purr/home/data/dtos/menu_item.dto.dart';
+
 class MenuItem {
-  final String id;
+  final int id;
   final String name;
-  final double price;
   final String description;
-  final String category;
-  final bool isAvailable;
-  final List<String?> imageUrl;
+  final double price;
+  final Nutrients nutrients;
+  final String imageUrl;
 
   MenuItem({
     required this.id,
     required this.name,
-    required this.price,
     required this.description,
-    required this.category,
-    this.isAvailable = true,
-    this.imageUrl = const [],
+    required this.price,
+    required this.nutrients,
+    required this.imageUrl,
   });
 
-  MenuItem copyWith({
-    String? id,
-    String? name,
-    double? price,
-    String? description,
-    String? category,
-    bool? isAvailable,
-    List<String?>? imageUrl,
-  }) {
+  factory MenuItem.fromDto(MenuItemDto dto) {
     return MenuItem(
-      id: id ?? this.id,
-      name: name ?? this.name,
-      price: price ?? this.price,
-      description: description ?? this.description,
-      category: category ?? this.category,
-      isAvailable: isAvailable ?? this.isAvailable,
-      imageUrl: imageUrl ?? this.imageUrl,
+      id: dto.id,
+      name: dto.name,
+      description: dto.description,
+      price: dto.price,
+      nutrients: Nutrients.fromDto(dto.nutrients),
+      imageUrl: dto.imageUrl,
+    );
+  }
+}
+
+class Nutrients {
+  final int kcal;
+  final int grams;
+  final int protein;
+  final int fats;
+  final int carbs;
+
+  Nutrients({
+    required this.kcal,
+    required this.grams,
+    required this.protein,
+    required this.fats,
+    required this.carbs,
+  });
+
+  factory Nutrients.fromDto(NutrientsDto dto) {
+    return Nutrients(
+      kcal: dto.kcal,
+      grams: dto.grams,
+      protein: dto.protein,
+      fats: dto.fats,
+      carbs: dto.carbs,
     );
   }
 }

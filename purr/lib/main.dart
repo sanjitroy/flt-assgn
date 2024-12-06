@@ -1,5 +1,22 @@
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:purr/appbar/appbar.widget.dart';
+import 'package:purr/design_system/colors.dart';
+import 'package:purr/design_system/responsiveness/responsive_demensions.dart';
+import 'package:purr/design_system/responsiveness/responsive_padding.dart';
+import 'package:purr/design_system/theme.dart';
+import 'package:purr/design_system/typography.dart';
+import 'package:purr/design_system/widgets/responsive_sized_box.widget.dart';
+import 'package:purr/design_system/widgets/rounded_edge_button.widget.dart';
+import 'package:purr/home/core/types/menu_item.type.dart';
+import 'package:purr/home/presentation/cubit/menu_cubit.dart';
+import 'package:purr/home/presentation/cubit/menu_state.dart';
+import 'package:purr/home/presentation/widgets/gradient_container_with_overflow_image.widget.dart';
+import 'package:purr/images.dart';
+import 'package:purr/mocks/mockData.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,10 +29,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Assignment',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.light,
       home: const MyHomePage(title: 'Home Page'),
     );
   }
@@ -30,254 +46,183 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: const CustomAppBar(),
-      body: Stack(
-        children: [
-          SingleChildScrollView(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Text('Hits of the week'),
-                SizedBox(height: 32),
-                GradientCarousel(),
-                FilterChipsWidget(),
-                MenuItemList(),
-              ],
-            ),
-          ),
-          const FloatingCartBar(),
-        ],
-      ),
-    );
-  }
-}
-
-class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CustomAppBar({
-    super.key,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      titleSpacing: 0, // Remove default spacing
-      backgroundColor: Colors.white, // Adjust based on your design system
-      elevation: 2, // Add shadow for depth
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          // Menu Icon
-          IconButton(
-            icon: const Icon(Icons.menu, color: Colors.black),
-            onPressed: () {
-              // Implement menu action here
-            },
-          ),
-          // Address Container
-          const Expanded(
-            child: Center(
-              child: const Text(
-                '1234 Elm Street, Springfield, IL 62701',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 18, // Adjust font size as needed
-                  fontWeight: FontWeight.bold,
-                ),
-                overflow: TextOverflow.ellipsis, // Prevent overflow issues
-              ),
-            ),
-          ),
-          // Search Icon
-          IconButton(
-            icon: const Icon(Icons.search, color: Colors.black),
-            onPressed: () {
-              // Implement search action here
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  @override
-  // TODO: implement preferredSize
-  Size get preferredSize => Size.fromHeight(
-        kToolbarHeight,
-      );
-}
-
-class GradientContainerWithImage extends StatelessWidget {
-  final String title;
-  final String buttonText;
-  final String imageUrl; // URL or asset path for the image
-  final VoidCallback onButtonPressed;
-
-  GradientContainerWithImage({
-    Key? key,
-    required this.title,
-    required this.buttonText,
-    required this.imageUrl,
-    required this.onButtonPressed,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none, // Allows image to overflow outside the container
-      children: [
-        Container(
-          height: 200, // Adjust container height
-          padding: EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                Colors.orangeAccent, // Start color
-                Colors.deepOrange, // End color
-              ],
-            ),
-            borderRadius: BorderRadius.circular(20), // Rounded corners
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              // Bottom-left text
-              Text(
-                title,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              // Bottom-right button
-              ElevatedButton(
-                onPressed: onButtonPressed, // No const here
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white, // Button color
-                  foregroundColor: Colors.deepOrange, // Text color
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+      body: BlocProvider(
+        create: (context) => MenuCubit()..loadMenu(),
+        child: BlocBuilder<MenuCubit, MenuState>(
+          builder: (context, state) {
+            if (state.isLoading) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            } else if (!state.isLoading) {
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                    clipBehavior: Clip.none,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Container(
+                          padding: ResponsiveEdgeInsets.symmetric(
+                            context,
+                            vertical: 16,
+                            horizontal: 16,
+                          ),
+                          child: Text(
+                            'Hits of the week',
+                            style: AppTypography.headline1,
+                          ),
+                        ),
+                        // const SizedBox(
+                        //   height: 16,
+                        // ),
+                        GradientCarousel(),
+                        // GradientContainerWithOverflowingImage(
+                        //     title: 'Two slices of pizza with delicious salami',
+                        //     buttonText: '\$21.78',
+                        //     imageUrl: AssetImages.saladImage,
+                        //     onButtonPressed: () {}),
+                        // GradientCarousel(),
+                        ResponsiveSizedBox(
+                          height: 24,
+                        ),
+                        FilterChipsWidget(),
+                        ResponsiveSizedBox(
+                          height: 8,
+                        ),
+                        MenuItemList(
+                          menuItems: state.menuItems,
+                        ),
+                        ResponsiveSizedBox(
+                          height: 64,
+                        )
+                      ],
+                    ),
                   ),
+                  Visibility(
+                      visible: state.cart.isNotEmpty,
+                      child: FloatingButton(
+                        amountToPay: (state.cart.isNotEmpty)
+                            ? state.cart
+                                .map((e) => e.menuItem.price * e.quantity)
+                                .reduce((value, element) => value + element)
+                                .toString()
+                            : '0',
+                      )),
+                ],
+              );
+            } else {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class GradientCarousel extends StatefulWidget {
+  @override
+  State<GradientCarousel> createState() => _GradientCarouselState();
+}
+
+class _GradientCarouselState extends State<GradientCarousel> {
+  int _currentIndex = 0;
+  final CarouselController _controller = CarouselController();
+  @override
+  Widget build(BuildContext context) {
+    MockMenuService().fetchMenu();
+    return FutureBuilder(
+      future: MockMenuService().fetchMenu(),
+      builder: (BuildContext context, AsyncSnapshot<List<MenuItem>> snapshot) {
+        if (snapshot.hasData) {
+          final data = snapshot.data!.sublist(0, 4);
+          return Column(
+            children: [
+              CarouselSlider.builder(
+                carouselController: _controller,
+                itemCount: data.length,
+                itemBuilder: (context, index, realIndex) {
+                  final item = data[index];
+                  return Padding(
+                    padding: ResponsiveEdgeInsets.symmetric(
+                      context,
+                      vertical: 12,
+                    ),
+                    child: GradientContainerWithOverflowingImage(
+                      title: item.description,
+                      buttonText: '\$${item.price}',
+                      imageUrl: item.imageUrl,
+                      onButtonPressed: () {
+                        print('${item.id} button pressed');
+                      },
+                    ),
+                  );
+                },
+                options: CarouselOptions(
+                  enableInfiniteScroll: false,
+                  viewportFraction: 1,
+                  height:
+                      ResponsiveDimensions.getProportionalHeight(context, 0.3),
+                  onPageChanged: (index, reason) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
                 ),
-                child: Text(buttonText),
+              ),
+              Padding(
+                padding: ResponsiveEdgeInsets.symmetric(context,
+                    vertical: 0, horizontal: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  mainAxisSize: MainAxisSize.max,
+                  children: data.asMap().entries.map((entry) {
+                    return GestureDetector(
+                      onTap: () => _controller.animateToPage(entry.key),
+                      child: Expanded(
+                        child: Container(
+                          width: ResponsiveDimensions.getResponsiveWidth(
+                            context,
+                            75,
+                          ),
+                          height: 4,
+                          margin: const EdgeInsets.symmetric(horizontal: 4.0),
+                          decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: _currentIndex == entry.key
+                                  ? AppColors.charcoalBlack
+                                  : AppColors.charcoalBlack.withOpacity(0.2)),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
             ],
-          ),
-        ),
-        // Positioned image, overflowing at the top
-        Positioned(
-          top: -30, // Adjusts image overlap outside the container
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Container(
-              width: 100, // Adjust image size
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle, // Circular image
-                image: DecorationImage(
-                  image: NetworkImage(
-                      imageUrl), // Replace with NetworkImage for URLs
-                  fit: BoxFit.cover,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 10,
-                    offset: Offset(0, 5),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class GradientCarousel extends StatelessWidget {
-  final List<Map<String, String>> carouselItems = [
-    {
-      "title": "Delicious Meals",
-      "buttonText": "Order Now",
-      "imageUrl": "https://picsum.photos/200"
-    },
-    {
-      "title": "Healthy Salads",
-      "buttonText": "Explore",
-      "imageUrl": "https://picsum.photos/200"
-    },
-    {
-      "title": "Tasty Desserts",
-      "buttonText": "Try Now",
-      "imageUrl": "https://picsum.photos/200"
-    },
-    {
-      "title": "Refreshing Drinks",
-      "buttonText": "Check Out",
-      "imageUrl": "https://picsum.photos/200"
-    },
-    {
-      "title": "Special Deals",
-      "buttonText": "Grab Now",
-      "imageUrl": "https://picsum.photos/200"
-    },
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: CarouselSlider.builder(
-        itemCount: carouselItems.length,
-        itemBuilder: (context, index, realIndex) {
-          final item = carouselItems[index];
-          return GradientContainerWithImage(
-            title: item["title"]!,
-            buttonText: item["buttonText"]!,
-            imageUrl: item["imageUrl"]!,
-            onButtonPressed: () {
-              // Implement specific actions per item if needed
-              print('${item["title"]} button pressed');
-            },
           );
-        },
-        options: CarouselOptions(
-          // height: 250, // Adjust the height as needed
-          // enlargeCenterPage: true,
-          enableInfiniteScroll: false,
-// viewportFraction: 32,
-          // autoPlay: false,
-          // viewportFraction: 0, // Adjust for spacing between items
-          // autoPlayInterval: Duration(seconds: 4),
-          // autoPlayAnimationDuration: Duration(milliseconds: 800),
-          // autoPlayCurve: Curves.fastOutSlowIn,
-          // enableInfiniteScroll: true,
-        ),
-      ),
+        } else {
+          return Center(
+            child: Container(),
+          );
+        }
+      },
     );
   }
 }
 
-class FilterChipsWidget extends StatefulWidget {
-  @override
-  _FilterChipsWidgetState createState() => _FilterChipsWidgetState();
-}
-
-class _FilterChipsWidgetState extends State<FilterChipsWidget> {
-  // List of filter options
+class FilterChipsWidget extends StatelessWidget {
   final List<String> filterOptions = [
     'All',
-    'Veg',
-    'Non-Veg',
+    'Salads',
+    'Pizza',
+    'Beverages',
+    'Snacks',
     'Drinks',
-    'Desserts',
-    'Specials',
   ];
 
-  // Track selected filters
   final Set<String> selectedFilters = {};
 
   @override
@@ -285,32 +230,23 @@ class _FilterChipsWidgetState extends State<FilterChipsWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
       child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal, // Allow horizontal scrolling
+        scrollDirection: Axis.horizontal,
         child: Row(
           children: filterOptions.map((filter) {
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 6.0),
-              child: FilterChip(
-                label: Text(filter),
-                selected: selectedFilters.contains(filter),
-                onSelected: (isSelected) {
-                  setState(() {
-                    if (isSelected) {
-                      selectedFilters.add(filter); // Add to selected filters
-                    } else {
-                      selectedFilters
-                          .remove(filter); // Remove from selected filters
-                    }
-                  });
-                  // Optionally, perform an action with selected filters
-                  print(selectedFilters);
-                },
-                backgroundColor: Colors.grey[200],
-                selectedColor: Colors.deepOrangeAccent,
-                labelStyle: TextStyle(
-                  color: selectedFilters.contains(filter)
-                      ? Colors.white
-                      : Colors.black,
+              child: Container(
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: AppColors.charcoalBlack.withOpacity(0.1)),
+                padding: ResponsiveEdgeInsets.symmetric(
+                  context,
+                  vertical: 10,
+                  horizontal: 14,
+                ),
+                child: Text(
+                  filter,
+                  style: AppTypography.labelText,
                 ),
               ),
             );
@@ -322,58 +258,34 @@ class _FilterChipsWidgetState extends State<FilterChipsWidget> {
 }
 
 class MenuItemList extends StatelessWidget {
-  // Sample list of menu items
-  final List<Map<String, dynamic>> menuItems = [
-    {
-      "title": "Grilled Chicken",
-      "price": "\$12.99",
-      "calories": "350 kcal",
-      "imageUrl": "https://picsum.photos/100", // Placeholder image URL
-    },
-    {
-      "title": "Vegetarian Pizza",
-      "price": "\$10.49",
-      "calories": "400 kcal",
-      "imageUrl": "https://picsum.photos/100",
-    },
-    {
-      "title": "Caesar Salad",
-      "price": "\$8.99",
-      "calories": "250 kcal",
-      "imageUrl": "https://picsum.photos/100",
-    },
-    {
-      "title": "Chocolate Cake",
-      "price": "\$6.50",
-      "calories": "450 kcal",
-      "imageUrl": "https://picsum.photos/100",
-    },
-  ];
+  final List<MenuItem> menuItems;
 
-  void _showBottomSheet(BuildContext context) {
+  const MenuItemList({super.key, required this.menuItems});
+
+  void _showBottomSheet(BuildContext context, MenuItem item) {
     showModalBottomSheet(
       context: context,
       isDismissible: true,
       isScrollControlled: true,
-      backgroundColor:
-          Colors.transparent, // Transparent background to see outside content
-      builder: (BuildContext context) {
+      backgroundColor: Colors.transparent,
+      builder: (_) {
         return Stack(
-          clipBehavior: Clip.none, // Allows bar to overflow outside
+          clipBehavior: Clip.none,
           children: [
-            // Bottom Sheet Content
             Container(
-              height: MediaQuery.of(context).size.height *
-                  0.75, // 3/4th screen height
+              // height: MediaQuery.of(context).size.height *
+              //     0.75,
               decoration: const BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               ),
-              child: BottomSheetContent(),
+              child: MenuItemDetails(
+                item: item,
+                menuCubit: BlocProvider.of<MenuCubit>(context),
+              ),
             ),
-            // Draggable bar outside on top
             Positioned(
-              top: -15, // Positioned outside the top border
+              top: -15,
               left: MediaQuery.of(context).size.width / 2 - 25,
               child: Container(
                 width: 50,
@@ -393,64 +305,76 @@ class MenuItemList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      shrinkWrap: true, // Ensures it takes only necessary space inside a Column
-      physics:
-          NeverScrollableScrollPhysics(), // Disable internal scrolling if nested
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
       itemCount: menuItems.length,
       itemBuilder: (context, index) {
         final item = menuItems[index];
         return GestureDetector(
-          onTap: () => _showBottomSheet(context),
+          onTap: () => _showBottomSheet(
+            context,
+            item,
+          ),
           child: Padding(
             padding:
-                const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Item Image
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10), // Rounded corners
-                  child: Image.network(
-                    item["imageUrl"],
-                    width: 120,
-                    height: 120,
-                    fit: BoxFit.cover,
+                Container(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(90),
+                    child: Image.asset(
+                      item.imageUrl,
+                      width: 150,
+                      height: 150,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  decoration: BoxDecoration(
+                    boxShadow: [
+                      const BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 25,
+                        offset: Offset(-2, 2),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 64), // Spacing between image and text
+                const SizedBox(width: 32),
                 // Item Details
                 Expanded(
                   child: Column(
+                    // mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Title
                       Text(
-                        item["title"],
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        item.name,
+                        style: AppTypography.labelText.copyWith(
+                          fontSize: 16,
                         ),
                       ),
                       const SizedBox(
-                          height: 8), // Spacing between title and info row
-                      // Price and Calories Row
+                        height: 16,
+                      ),
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            item["price"],
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.green,
-                            ),
+                          RoundedEdgeButton(
+                            text: item.price.toString(),
+                            bgColor: AppColors.charcoalBlack.withOpacity(0.1),
+                            textColor: AppColors.charcoalBlack,
+                            onTap: () {},
+                          ),
+                          ResponsiveSizedBox(
+                            width: 16,
                           ),
                           Text(
-                            item["calories"],
+                            '${item.nutrients.kcal} kcal',
                             style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
+                                fontSize: 14,
+                                color:
+                                    AppColors.charcoalBlack.withOpacity(0.25)),
                           ),
                         ],
                       ),
@@ -466,170 +390,312 @@ class MenuItemList extends StatelessWidget {
   }
 }
 
-class BottomSheetContent extends StatelessWidget {
-  const BottomSheetContent({super.key});
+class MenuItemDetails extends StatelessWidget {
+  final MenuItem item;
+  final MenuCubit menuCubit;
+  const MenuItemDetails({
+    super.key,
+    required this.item,
+    required this.menuCubit,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Top Image
-          Padding(
-            padding: const EdgeInsets.only(top: 20.0),
-            child: Image.network(
-              'https://picsum.photos/200', // Placeholder image URL
-              height: 120,
-              width: 120,
-              fit: BoxFit.cover,
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Title Text
-          const Text(
-            'Item Title',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Description Text
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
-            child: Text(
-              'This is a brief description of the item. It gives details about the features, ingredients, or other important information.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 20),
-
-          // Container with 5 Texts in a Row
-          Container(
-            padding:
-                const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
-            color: Colors.grey[200],
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: const [
-                Text('Detail 1', style: TextStyle(fontSize: 14)),
-                Text('Detail 2', style: TextStyle(fontSize: 14)),
-                Text('Detail 3', style: TextStyle(fontSize: 14)),
-                Text('Detail 4', style: TextStyle(fontSize: 14)),
-                Text('Detail 5', style: TextStyle(fontSize: 14)),
-              ],
-            ),
-          ),
-          ExpansionTile(
-            title: const Text(
-              'More Information',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            children: const [
-              Padding(
-                padding: EdgeInsets.all(12.0),
-                child: Text(
-                  'This is additional information about the item. You can add details like ingredients, nutritional values, or any other relevant data.',
-                  style: TextStyle(fontSize: 16, color: Colors.black54),
+    // final menuCubit = BlocProvider.of<MenuCubit>(context);
+    return BlocBuilder<MenuCubit, MenuState>(
+      bloc: menuCubit,
+      builder: (context, state) {
+        final quantity = state.tempQuantities[item.id] ?? 1;
+        return SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 24.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(150),
+                      child: Image.asset(
+                        item.imageUrl,
+                        height: 250,
+                        width: 250,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          ),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              // Counter Button with (-) and (+)
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: Colors.grey[200],
+                ResponsiveSizedBox(height: 32),
+                Text(
+                  item.name,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
-                child: Row(
+                ResponsiveSizedBox(height: 20),
+                Text(
+                  item.description,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.grey,
+                  ),
+                ),
+                ResponsiveSizedBox(height: 20),
+                NutrientCard(
+                  nutrients: item.nutrients,
+                ),
+                ResponsiveSizedBox(
+                  height: 16,
+                ),
+                ExpansionTile(
+                  dense: true,
+                  trailing: Icon(Icons.chevron_right),
+                  title: Text(
+                    'Add in ${item.name}',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.remove),
-                      onPressed: () {
-                        // Logic to decrement count
-                      },
-                    ),
-                    const Text(
-                      '1', // Initial value; this will be dynamic
-                      style: TextStyle(fontSize: 18),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.add),
-                      onPressed: () {
-                        // Logic to increment count
-                      },
+                    Padding(
+                      padding: EdgeInsets.all(12.0),
+                      child: Container(),
                     ),
                   ],
                 ),
-              ),
+                ResponsiveSizedBox(
+                  height: 24,
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: ResponsiveEdgeInsets.symmetric(context,
+                          vertical: 4, horizontal: 10),
+                      decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(8),
+                          color: AppColors.charcoalBlack.withOpacity(0.07)),
+                      child: Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.remove),
+                            color: AppColors.charcoalBlack.withOpacity(0.2),
+                            onPressed: () {
+                              if (quantity > 0)
+                                menuCubit.updateTempQuantity(
+                                    item, quantity - 1);
+                            },
+                          ),
+                          ResponsiveSizedBox(
+                            width: 8,
+                          ),
+                          Text(
+                            '$quantity',
+                            style:
+                                AppTypography.labelText.copyWith(fontSize: 16),
+                          ),
+                          ResponsiveSizedBox(
+                            width: 8,
+                          ),
+                          IconButton(
+                            icon: Icon(
+                              Icons.add,
+                              color: AppColors.charcoalBlack.withOpacity(0.8),
+                            ),
+                            onPressed: () {
+                              menuCubit.updateTempQuantity(item, quantity + 1);
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    ResponsiveSizedBox(
+                      width: 8,
+                    ),
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          menuCubit.addItemToCart(item);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppColors.charcoalBlack,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: ResponsiveEdgeInsets.symmetric(context,
+                              horizontal: 24, vertical: 16),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Add to Cart',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Spacer(),
+                              Text(
+                                '\$${item.price * quantity}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                ResponsiveSizedBox(
+                  height: 24,
+                )
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
 
-              // Add to Cart Button
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange, // Customize as needed
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                onPressed: () {
-                  // Logic to add item to cart
-                },
-                child: const Text(
-                  'Add to Cart',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
-              ),
-            ],
-          )
+class NutrientCard extends StatelessWidget {
+  final Nutrients nutrients;
+  const NutrientCard({
+    super.key,
+    required this.nutrients,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: ResponsiveEdgeInsets.symmetric(context,
+          vertical: 18.0, horizontal: 8.0),
+      decoration: BoxDecoration(
+        border: Border.all(
+          color: AppColors.charcoalBlack.withOpacity(0.1),
+        ),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          NutrientContent(value: nutrients.kcal.toString(), unit: 'kcal'),
+          NutrientContent(value: nutrients.grams.toString(), unit: 'grams'),
+          NutrientContent(
+              value: nutrients.protein.toString(), unit: 'proteins'),
+          NutrientContent(value: nutrients.fats.toString(), unit: 'fats'),
+          NutrientContent(value: nutrients.carbs.toString(), unit: 'carbs'),
         ],
       ),
     );
   }
 }
 
-class FloatingCartBar extends StatelessWidget {
-  const FloatingCartBar({super.key});
+class NutrientContent extends StatelessWidget {
+  final String value;
+  final String unit;
+  const NutrientContent({
+    super.key,
+    required this.value,
+    required this.unit,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: AppTypography.bodyTextBold,
+        ),
+        Text(unit,
+            style: AppTypography.labelText
+                .copyWith(color: AppColors.charcoalBlack.withOpacity(0.2))),
+      ],
+    );
+  }
+}
+
+class FloatingButton extends StatelessWidget {
+  final bool generateLongButton;
+  final String title;
+  final String amountToPay;
+  const FloatingButton({
+    super.key,
+    required this.amountToPay,
+    this.generateLongButton = true,
+    this.title = 'Cart',
+  });
 
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: 20,
+      bottom: ResponsiveDimensions.getResponsiveHeight(
+        context,
+        28,
+      ),
       left: 20,
       right: 20,
       child: GestureDetector(
         onTap: () {
           showModalBottomSheet(
             context: context,
-            isScrollControlled: true, // Covers most of the screen
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-            ),
-            builder: (BuildContext context) {
-              return CheckoutWidget();
+            isDismissible: true,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (_) {
+              if (BlocProvider.of<MenuCubit>(context).state.cart.isEmpty) {
+                Navigator.pop(context);
+                Navigator.pop(context);
+              }
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  Container(
+                    // height: MediaQuery.of(context).size.height *
+                    //     0.75, // 3/4th screen height
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    child: CheckoutWidget(
+                      menuCubit: BlocProvider.of<MenuCubit>(context),
+                    ),
+                  ),
+                  Positioned(
+                    top: -15,
+                    left: MediaQuery.of(context).size.width / 2 - 25,
+                    child: Container(
+                      width: 50,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ],
+              );
             },
           );
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: ResponsiveEdgeInsets.symmetric(context,
+              horizontal: 20, vertical: 12),
+          height: ResponsiveDimensions.getResponsiveHeight(
+            context,
+            54,
+          ),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.charcoalBlack,
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
@@ -643,23 +709,35 @@ class FloatingCartBar extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              // Cart Text
-              const Text(
-                'Cart',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Text(
+                title,
+                style: AppTypography.bodyText.copyWith(
+                  color: Colors.white,
+                ),
               ),
-
-              // Right-aligned text: time and cost
               Row(
-                children: const [
+                children: [
                   Text(
                     '24 mins',
-                    style: TextStyle(fontSize: 16),
+                    style: AppTypography.bodyText.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
-                  SizedBox(width: 12), // Spacing between time and price
+                  const ResponsiveSizedBox(width: 8),
                   Text(
-                    '\$24',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    '\u2022',
+                    style: AppTypography.headline2.copyWith(
+                      color: Colors.white,
+                    ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const ResponsiveSizedBox(width: 8),
+                  Text(
+                    '\$$amountToPay',
+                    style: AppTypography.bodyText.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ],
               ),
@@ -672,332 +750,432 @@ class FloatingCartBar extends StatelessWidget {
 }
 
 class CheckoutWidget extends StatelessWidget {
-  const CheckoutWidget({super.key});
+  final MenuCubit menuCubit;
+  const CheckoutWidget({
+    super.key,
+    required this.menuCubit,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Checkout Title
-          Center(
-            child: Text(
-              'Checkout',
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+    return BlocBuilder<MenuCubit, MenuState>(
+      bloc: menuCubit,
+      builder: (context, state) {
+        return SingleChildScrollView(
+          child: Container(
+            padding: ResponsiveEdgeInsets.symmetric(
+              context,
+              horizontal: 16,
+              vertical: 28,
             ),
-          ),
-          SizedBox(height: 16), // Spacer between elements
-
-          // Address Text
-          Text(
-            'Delivery Address:',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          SizedBox(height: 8), // Spacer below address label
-          Text(
-            '123 Main Street, Springfield, USA', // Replace with dynamic data
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey,
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Image on the left
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    'https://picsum.photos/80',
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
+                Text(
+                  'We will deliver in\n24 minutes to the address: ',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(width: 16), // Space between image and column
+                ResponsiveSizedBox(
+                  height: 16,
+                ),
+                Row(
+                  children: [
+                    const Text(
+                      '100a Ealing Rd',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const ResponsiveSizedBox(width: 8),
+                    const Text(
+                      'Change address',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ],
+                ),
+                ResponsiveSizedBox(
+                  height: 24,
+                ),
+                Visibility(
+                  visible: state.cart.isNotEmpty,
+                  child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount:
+                          (state.cart.isNotEmpty) ? state.cart.length : 0,
+                      itemBuilder: (context, index) {
+                        if (state.cart.isEmpty) {
+                          return const Center(
+                            child: Text('No items in cart'),
+                          );
+                          // Navigator.pop(context);
+                        } else {
+                          return Container(
+                            padding: ResponsiveEdgeInsets.symmetric(
+                              context,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Container(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(90),
+                                    child: Image.asset(
+                                      state.cart[index].menuItem.imageUrl,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  decoration: BoxDecoration(
+                                    boxShadow: [
+                                      const BoxShadow(
+                                        color: Colors.black12,
+                                        blurRadius: 25,
+                                        offset: Offset(-2, 2),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                ResponsiveSizedBox(width: 16),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        state.cart[index].menuItem.name,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Row(
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () {
+                                              if (state.cart[index].quantity >
+                                                  0)
+                                                menuCubit.updateCartItem(
+                                                    state.cart[index].menuItem,
+                                                    state.cart[index].quantity -
+                                                        1);
+                                            },
+                                            child: Container(
+                                              padding: ResponsiveEdgeInsets
+                                                  .symmetric(
+                                                context,
+                                                horizontal: 6,
+                                                vertical: 6,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                  color: AppColors.charcoalBlack
+                                                      .withOpacity(0.05),
+                                                  borderRadius:
+                                                      BorderRadius.circular(8)),
+                                              child: Icon(
+                                                Icons.remove,
+                                                size: 18,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Text(
+                                            state.cart[index].quantity
+                                                .toString(),
+                                            style: TextStyle(fontSize: 16),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          // Plus button
+                                          GestureDetector(
+                                            onTap: () {
+                                              menuCubit.updateCartItem(
+                                                  state.cart[index].menuItem,
+                                                  state.cart[index].quantity +
+                                                      1);
+                                            },
+                                            child: Container(
+                                                padding: ResponsiveEdgeInsets
+                                                    .symmetric(
+                                                  context,
+                                                  horizontal: 6,
+                                                  vertical: 6,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                    color: AppColors
+                                                        .charcoalBlack
+                                                        .withOpacity(0.05),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            8)),
+                                                child: Icon(
+                                                  Icons.add,
+                                                  size: 18,
+                                                )),
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  '\$${state.cart[index].menuItem.price * state.cart[index].quantity}',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                      }),
+                ),
 
-                // Column with text and counter
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Divider(
+                  color: AppColors.charcoalBlack.withOpacity(0.1),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Item title
-                      const Text(
-                        'Delicious Burger', // Replace with dynamic data
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                      Container(
+                        height: 50,
+                        width: 70,
+                        child: Center(
+                          child: Icon(
+                            Icons.fork_right,
+                            size: 30,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
-                      const SizedBox(
-                          height: 8), // Spacer between title and counter
+                      // const SizedBox(width: 16),
+                      ResponsiveSizedBox(
+                        width: 32,
+                      ),
+                      const Expanded(
+                        child: Text(
+                          'Cutlery',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
 
-                      // Counter row
                       Row(
                         children: [
-                          // Minus button
                           GestureDetector(
-                            onTap: () {
-                              // Handle decrement logic here
-                            },
-                            child: const Icon(Icons.remove_circle_outline),
+                            onTap: () {},
+                            child: Container(
+                              padding: ResponsiveEdgeInsets.symmetric(
+                                context,
+                                horizontal: 6,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                  color:
+                                      AppColors.charcoalBlack.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Icon(
+                                Icons.remove,
+                                size: 18,
+                              ),
+                            ),
                           ),
-                          const SizedBox(
-                              width: 12), // Space between buttons and number
+                          const SizedBox(width: 12),
                           const Text(
-                            '1', // Replace with dynamic count value
+                            '1',
                             style: TextStyle(fontSize: 16),
                           ),
                           const SizedBox(width: 12),
-                          // Plus button
                           GestureDetector(
-                            onTap: () {
-                              // Handle increment logic here
-                            },
-                            child: const Icon(Icons.add_circle_outline),
+                            onTap: () {},
+                            child: Container(
+                              padding: ResponsiveEdgeInsets.symmetric(
+                                context,
+                                horizontal: 6,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                  color:
+                                      AppColors.charcoalBlack.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(8)),
+                              child: Icon(
+                                Icons.add,
+                                size: 18,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ],
                   ),
                 ),
-
-                // Text on the right
-                const Text(
-                  '\$12', // Replace with dynamic price data
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                Divider(
+                  color: AppColors.charcoalBlack.withOpacity(0.1),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                // Icon on the left
-                const Icon(
-                  Icons.fastfood, // Replace with your desired icon
-                  size: 30,
-                  color: Colors.black,
-                ),
-                const SizedBox(width: 16), // Space between icon and text
-
-                // Text in the middle
-                const Expanded(
-                  child: Text(
-                    'Extra Sauce', // Replace with dynamic text
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-
-                // Counter on the right
-                Row(
-                  children: [
-                    // Minus button
-                    GestureDetector(
-                      onTap: () {
-                        // Handle decrement logic here
-                      },
-                      child: const Icon(Icons.remove_circle_outline),
-                    ),
-                    const SizedBox(
-                        width: 12), // Space between buttons and number
-                    const Text(
-                      '1', // Replace with dynamic count value
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    const SizedBox(width: 12),
-                    // Plus button
-                    GestureDetector(
-                      onTap: () {
-                        // Handle increment logic here
-                      },
-                      child: const Icon(Icons.add_circle_outline),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // Column on the left with two texts
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'Item Details:', // Replace with dynamic text
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                  child: const Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Delivery',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            'Free delivery from \$30',
+                            style:
+                                TextStyle(fontSize: 14, color: Colors.black54),
+                          ),
+                        ],
                       ),
-                    ),
-                    SizedBox(height: 8), // Spacer between texts
-                    Text(
-                      'Tasty burger with fries', // Replace with dynamic text
-                      style: TextStyle(fontSize: 14, color: Colors.black54),
-                    ),
-                  ],
-                ),
-
-                const Spacer(), // Spacer to push the text on the right to the far end of the Row
-
-                // Text on the right
-                const Text(
-                  'Additional details here...', // Replace with dynamic text
-                  style: TextStyle(fontSize: 14, color: Colors.black54),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // Icon on the left
-                const Icon(
-                  Icons.location_on, // Replace with your desired icon
-                  color: Colors.black54,
-                  size: 24,
-                ),
-
-                // Text beside the icon
-                const SizedBox(width: 8), // Spacer between the icon and text
-                const Text(
-                  'Delivery Address', // Replace with dynamic text
-                  style: TextStyle(fontSize: 14, color: Colors.black54),
-                ),
-
-                const Spacer(), // Spacer to push the next icon to the far right
-
-                // Icon on the right
-                const Icon(
-                  Icons.arrow_forward_ios, // Replace with your desired icon
-                  color: Colors.black54,
-                  size: 24,
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  spreadRadius: 2,
-                  blurRadius: 5,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: const [
-                // Cart text on the left
-                Text(
-                  'Cart',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                      Spacer(),
+                      Text(
+                        '\$0.00',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 14, color: Colors.black54),
+                      ),
+                    ],
                   ),
                 ),
-
-                // Time and price on the right
-                Row(
-                  children: [
-                    Text(
-                      '24 mins',
-                      style: TextStyle(
-                        fontSize: 14,
+                ResponsiveSizedBox(
+                  height: 64,
+                ),
+                Text('Payment method'),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.payment_outlined,
                         color: Colors.black54,
+                        size: 24,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '\$24',
-                      style: TextStyle(
-                        fontSize: 14,
+                      SizedBox(width: 8),
+                      Text(
+                        'Apple pay',
+                        style: TextStyle(fontSize: 14, color: Colors.black54),
+                      ),
+                      Spacer(),
+                      Icon(
+                        Icons.chevron_right,
                         color: Colors.black54,
+                        size: 24,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                ResponsiveSizedBox(
+                  height: 16,
+                ),
+                FloatingButton(
+                  title: 'Pay',
+                  amountToPay: (state.cart.isNotEmpty)
+                      ? state.cart
+                          .map(
+                            (e) => (e.menuItem.price * e.quantity),
+                          )
+                          .reduce((value, element) => value + element)
+                          .toString()
+                      : '0',
+                ),
+                // Container(
+                //   padding:
+                //       const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                //   decoration: BoxDecoration(
+                //     color: Colors.white,
+                //     borderRadius: BorderRadius.circular(12),
+                //     boxShadow: [
+                //       BoxShadow(
+                //         color: Colors.grey.withOpacity(0.2),
+                //         spreadRadius: 2,
+                //         blurRadius: 5,
+                //         offset: const Offset(0, 3),
+                //       ),
+                //     ],
+                //   ),
+                //   child: const Row(
+                //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //     children: [
+                //       // Cart text on the left
+                //       Text(
+                //         'Cart',
+                //         style: TextStyle(
+                //           fontSize: 16,
+                //           fontWeight: FontWeight.bold,
+                //           color: Colors.black,
+                //         ),
+                //       ),
+
+                //       // Time and price on the right
+                //       Row(
+                //         children: [
+                //           Text(
+                //             '24 mins',
+                //             style: TextStyle(
+                //               fontSize: 14,
+                //               color: Colors.black54,
+                //             ),
+                //           ),
+                //           SizedBox(width: 8),
+                //           Text(
+                //             '\$24',
+                //             style: TextStyle(
+                //               fontSize: 14,
+                //               color: Colors.black54,
+                //             ),
+                //           ),
+                //         ],
+                //       ),
+                //     ],
+                //   ),
+                // )
               ],
             ),
-          )
-        ],
-      ),
+          ),
+        );
+      },
     );
   }
 }
